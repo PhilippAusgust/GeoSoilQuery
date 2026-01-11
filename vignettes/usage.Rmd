@@ -1,0 +1,77 @@
+---
+title: "usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(GeoSoilQuery)
+```
+
+# Introduction
+
+GeoSoilQuery ermöglicht schnelle räumliche Abfragen geologischer Parameter
+auf Basis des IGME5000-Datensatzes.
+
+# Data source
+
+Das Paket enthält Beispieldaten unter `inst/extdata/IGME5000`
+
+```{r}
+
+geology_path = system.file(
+"extdata", "IGME5000", "europe", "data",
+"IGME5000_europeEPSG3034shp_geology_poly_v01.shp",
+package = "GeoSoilQuery"
+)
+
+geology_path
+```
+
+# Single point query
+
+
+```{r}
+
+geo = GeoSoilQuery$new(geology_path)
+
+geo$query_geology(lat = 50.9375, lon = 6.9603)
+```
+
+
+
+# Batch query
+
+
+```{r}
+
+df <- data.frame(
+Site = c("Koeln", "Berlin"),
+Lat = c(50.9375, 52.5200),
+Lon = c(6.9603, 13.4050)
+)
+
+geo$query_batch(df, lat_col = "Lat", lon_col = "Lon")
+
+```
+
+
+# Cache
+
+```{r}
+geo$cache_info()
+geo$clear_cache()
+
+```
+
+
