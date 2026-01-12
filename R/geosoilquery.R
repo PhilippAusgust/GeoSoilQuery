@@ -103,7 +103,39 @@ GeoSoilQuery <- R6::R6Class(
 
     make_cache_key = function(lat, lon, param_type) {
       paste(round(lat, 6), round(lon, 6), param_type, sep = "_")
+    },
+
+
+    as_df = function(info) {
+
+      # FALL 1: kein Treffer
+      if (!isTRUE(info$found)) {
+        return(data.frame(
+          found = FALSE,
+          AgeName = NA_character_,
+          Portr_AGE = NA,
+          Portr_Petr = NA_character_,
+          AgeOldest = NA,
+          AgeNewest = NA,
+          message = info$message %||% NA_character_,
+          stringsAsFactors = FALSE
+        ))
+      }
+
+      # FALL 2: Treffer
+      data.frame(
+        found = TRUE,
+        AgeName = info$AgeName,
+        Portr_AGE = info$Portr_AGE,
+        Portr_Petr = info$Portr_Petr,
+        AgeOldest = info$AgeOldest,
+        AgeNewest = info$AgeNewest,
+        stringsAsFactors = FALSE
+      )
     }
+
+
+
   ),
 
   public = list(
@@ -139,14 +171,17 @@ GeoSoilQuery <- R6::R6Class(
     #' @param lon Longitude (WGS84).
     #' @return Liste mit geologischen Attributen.
     #' @importFrom sf st_as_sf st_join st_intersects st_drop_geometry
-    query_geology = function(lat, lon) {
+    query_geology = function(lat, lon, return_df = FALSE) {
       private$validate_coords(lat, lon)
 
       cache_key <- private$make_cache_key(lat, lon, "geology")
       if (self$use_cache && !is.null(private$query_cache[[cache_key]])) {
         message("✓ Aus Cache geladen")
-        return(private$query_cache[[cache_key]])
+        info <- private$query_cache[[cache_key]]
+        if (return_df) return(private$as_df(info))
+        return(info)
       }
+
 
       point_sf <- sf::st_as_sf(
         data.frame(lon = lon, lat = lat),
@@ -156,10 +191,11 @@ GeoSoilQuery <- R6::R6Class(
 
       result <- sf::st_join(point_sf, private$geology_poly_valid, join = sf::st_intersects)
 
-      if (nrow(result) == 0) {
-        geology_info <- list(found = FALSE, message = "Keine geologischen Daten an dieser Koordinate")
+
+      if (nrow(result) == 0 || all(is.na(sf::st_drop_geometry(result)[1, ]))) {
+        info <- list(found = FALSE, message = "Keine geologischen Daten an dieser Koordinate")
       } else {
-        geology_info <- list(
+        info <- list(
           found = TRUE,
           AgeName = result$AgeName[1],
           Portr_AGE = result$Portr_AGE[1],
@@ -170,8 +206,12 @@ GeoSoilQuery <- R6::R6Class(
         )
       }
 
-      if (self$use_cache) private$query_cache[[cache_key]] <- geology_info
-      geology_info
+      # Cache speichern (Liste)
+      if (self$use_cache) private$query_cache[[cache_key]] <- info
+
+      # Output nach Wunsch
+      if (return_df) return(private$as_df(info))
+      info
     },
 
     #' @description
