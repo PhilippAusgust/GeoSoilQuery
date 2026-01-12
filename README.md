@@ -17,7 +17,7 @@ in räumliche Analysen integrieren möchten.
 
 ```r
 install.packages("remotes")
-remotes::install_github("philippaugustmuenker/GeoSoilQuery")
+remotes::install_github("PhilippAusgust/GeoSoilQuery")
 ```
 
 
