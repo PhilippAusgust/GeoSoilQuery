@@ -1,5 +1,7 @@
 # GeoSoilQuery
 
+*English Version below* 
+
 GeoSoilQuery ist ein R-Paket zur schnellen räumlichen Abfrage geologischer Parameter
 auf Basis des IGME5000-Datensatzes. Es kapselt das Laden und räumliche Joinen großer
 Geodatensätze und stellt eine einfache API für Punkt- und Batch-Abfragen bereit.
@@ -7,7 +9,7 @@ Geodatensätze und stellt eine einfache API für Punkt- und Batch-Abfragen berei
 Das Paket richtet sich an Nutzer, die geologische Kontextinformationen effizient
 in räumliche Analysen integrieren möchten.
 
----
+
 
 ## Installation
 
@@ -97,7 +99,6 @@ Dieses Paket steht unter der MIT-Lizenz (siehe LICENSE).
 
 
 
----
 
 
 
@@ -110,7 +111,7 @@ geological datasets and provides a simple API for point-based and batch-based qu
 The package is intended for users who want to efficiently integrate geological
 context information into spatial analyses.
 
----
+
 
 ## Installation
 
@@ -121,14 +122,13 @@ install.packages("remotes")
 remotes::install_github("philippaugustmuenker/GeoSoilQuery")
 ```
 
----
 
 ## Data
 
 Due to licensing and file size restrictions, the IGME5000 geodata are **not included**
 in this repository.
 
----
+
 
 ### Requesting the data
 
@@ -142,7 +142,7 @@ After downloading, extract the folder for example to:
 
 `~/data/IGME5000`
 
----
+
 
 ## Example
 
@@ -154,7 +154,7 @@ library(GeoSoilQuery)
 geology_path <- "~/data/IGME5000/europe/data/IGME5000_europeEPSG3034shp_geology_poly_v01.shp"
 ```
 
----
+
 
 ### Single point query
 
@@ -164,7 +164,6 @@ geo <- GeoSoilQuery$new(geology_path)
 geo$query_geology(lat = 50.9375, lon = 6.9603)
 ```
 
----
 
 ### Batch query
 
@@ -178,7 +177,7 @@ df <- data.frame(
 geo$query_batch(df, lat_col = "Lat", lon_col = "Lon")
 ```
 
----
+
 
 ### Cache
 
@@ -187,7 +186,7 @@ geo$cache_info()
 geo$clear_cache()
 ```
 
----
+
 
 ## Notes
 
@@ -195,7 +194,7 @@ geo$clear_cache()
 - The shapefile is loaded and transformed internally only once.
 - Results can optionally be cached to improve performance.
 
----
+
 
 ## Data source
 
@@ -206,7 +205,7 @@ All rights remain with the respective data providers.
 
 https://www.europe-geology.eu/project/igme-5000-3/
 
----
+
 
 ## License
 
