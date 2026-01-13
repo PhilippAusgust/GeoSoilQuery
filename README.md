@@ -1,219 +1,285 @@
 # GeoSoilQuery
 
-*English Version below* 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R](https://img.shields.io/badge/R-%3E%3D%204.0-blue)](https://www.r-project.org/)
 
-GeoSoilQuery ist ein R-Paket zur schnellen räumlichen Abfrage geologischer Parameter
-auf Basis des IGME5000-Datensatzes. Es kapselt das Laden und räumliche Joinen großer
-Geodatensätze und stellt eine einfache API für Punkt- und Batch-Abfragen bereit.
+Ein R-Paket zur effizienten räumlichen Abfrage geologischer Parameter auf Basis des IGME5000-Datensatzes.
 
-Das Paket richtet sich an Nutzer, die geologische Kontextinformationen effizient
-in räumliche Analysen integrieren möchten.
+---
 
+## Überblick
 
+**GeoSoilQuery** ermöglicht die schnelle und unkomplizierte räumliche Abfrage geologischer Parameter aus dem IGME5000-Datensatz von EuroGeoSurveys. Das Paket kapselt das Laden und räumliche Joinen großer Geodatensätze und bietet eine intuitive API für Einzelpunkt- und Batch-Abfragen.
+
+Das Paket richtet sich an Wissenschaftler und Analysten, die geologische Kontextinformationen effizient in ihre räumlichen Analysen integrieren möchten.
+
+## Hauptfunktionen
+
+- **Einzelpunkt-Abfragen**: Geologische Parameter für einzelne Koordinaten abrufen
+- **Batch-Verarbeitung**: Mehrere Standorte gleichzeitig abfragen
+- **Caching-Mechanismus**: Optimierte Performance durch optionales Caching
+- **WGS84-Unterstützung**: Standardisierte Koordinateneingabe (EPSG:4326)
+- **R6-Klassensystem**: Moderne objektorientierte Schnittstelle
 
 ## Installation
 
-### Aktuell (GitHub)
+Das Paket kann direkt von GitHub installiert werden:
 
 ```r
-install.packages("remotes")
+# Installation von remotes (falls noch nicht vorhanden)
+if (!require("remotes")) install.packages("remotes")
+
+# Installation von GeoSoilQuery
 remotes::install_github("PhilippAusgust/GeoSoilQuery")
 ```
 
+### Systemvoraussetzungen
 
-### Daten
+- R ≥ 4.0
+- Erforderliche Pakete: `sf`, `R6`, `dplyr`
 
-Aus Lizenz- und Größen­gründen sind die IGME5000-Geodaten nicht Teil dieses Repositories.
+## Datenquelle
 
-### Daten anfragen
+Die geologischen Daten stammen aus dem **IGME5000-Projekt** von EuroGeoSurveys, einer Initiative zur Harmonisierung geologischer Informationen in Europa.
 
-Wenn du die Daten verwenden möchtest, schreibe bitte eine kurze Mail an:
+**Wichtig**: Aus Lizenz- und Größengründen sind die IGME5000-Geodaten nicht Bestandteil dieses Repositories.
 
-[philippaugustmuenker@gmail.com](mailto:philippaugustmuenker@gmail.com)
+### Datenzugang
 
-Du erhältst dann einen privaten Download-Link.
+Für den Zugang zu den benötigten Geodaten wenden Sie sich bitte an:
 
-Nach dem Download entpacke den Ordner z.B. nach:
+📧 [philippaugustmuenker@gmail.com](mailto:philippaugustmuenker@gmail.com)
 
-`~/data/IGME5000`
+Sie erhalten anschließend einen privaten Download-Link. Nach dem Download entpacken Sie die Daten in ein geeignetes Verzeichnis, z.B.:
 
-## Beispiel
+```
+~/data/IGME5000/
+```
 
+Weitere Informationen zum IGME5000-Projekt:  
+[https://www.europe-geology.eu/de/project/igme-5000-3/](https://www.europe-geology.eu/de/project/igme-5000-3/)
 
-### Datenpfad setzen
+## Verwendung
+
+### Initialisierung
 
 ```r
 library(GeoSoilQuery)
 
+# Pfad zur IGME5000-Shapefile definieren
 geology_path <- "~/data/IGME5000/europe/data/IGME5000_europeEPSG3034shp_geology_poly_v01.shp"
 
+# GeoSoilQuery-Objekt erstellen
+geo <- GeoSoilQuery$new(geology_path)
 ```
 
 ### Einzelpunkt-Abfrage
 
-
 ```r
-geo <- GeoSoilQuery$new(geology_path)
-
-geo$query_geology(lat = 50.9375, lon = 6.9603)
+# Geologische Parameter für Köln abfragen
+result <- geo$query_geology(lat = 50.9375, lon = 6.9603)
+print(result)
 ```
 
 ### Batch-Abfrage
 
-
 ```r
-df <- data.frame(
-  Site = c("Koeln", "Berlin"),
-  Lat  = c(50.9375, 52.5200),
-  Lon  = c(6.9603, 13.4050)
+# Datensatz mit mehreren Standorten erstellen
+sites <- data.frame(
+  Site = c("Köln", "Berlin", "München"),
+  Lat  = c(50.9375, 52.5200, 48.1351),
+  Lon  = c(6.9603, 13.4050, 11.5820)
 )
 
-geo$query_batch(df, lat_col = "Lat", lon_col = "Lon")
-
+# Batch-Abfrage durchführen
+results <- geo$query_batch(sites, lat_col = "Lat", lon_col = "Lon")
+print(results)
 ```
-### Cache 
 
+### Cache-Verwaltung
 
 ```r
+# Cache-Informationen anzeigen
 geo$cache_info()
+
+# Cache leeren
 geo$clear_cache()
 ```
 
-### Hinweise
+## Technische Hinweise
 
-* Die Koordinaten müssen im WGS84-Format (EPSG:4326) angegeben werden.
-* Der Shapefile wird intern einmal geladen und transformiert.
-* Ergebnisse können optional gecacht werden.
+- **Koordinatensystem**: Alle Eingabekoordinaten müssen im WGS84-Format (EPSG:4326, Dezimalgrad) vorliegen
+- **Datenverarbeitung**: Der Shapefile wird beim ersten Laden automatisch geladen und in das entsprechende Koordinatensystem transformiert
+- **Performance**: Durch intelligentes Caching werden wiederholte Abfragen deutlich beschleunigt
+- **Speicherbedarf**: Bei großen Datensätzen kann der Speicherbedarf signifikant sein
 
-### Daten 
-Die geologischen Daten stammen aus dem IGME5000-Projekt der EuroGeoSurveys.
+## Zitation
 
-Die Daten werden hier ausschließlich zu Demonstrations- und Analysezwecken verwendet.
-Alle Rechte verbleiben bei den jeweiligen Urhebern.
+Bei Verwendung dieses Pakets in wissenschaftlichen Publikationen bitten wir um Nennung sowohl des Pakets als auch der zugrunde liegenden IGME5000-Datenquelle.
 
-[https://www.europe-geology.eu/de/project/igme-5000-3/](https://www.europe-geology.eu/de/project/igme-5000-3/)
+```
+Münker, P. A. (2025). GeoSoilQuery: Spatial Query Tool for Geological Parameters.
+R package. https://github.com/PhilippAusgust/GeoSoilQuery
 
-### Lizenz
-Dieses Paket steht unter der MIT-Lizenz (siehe LICENSE).
+EuroGeoSurveys (2020). IGME5000: 1:5 Million International Geological Map of Europe
+and Adjacent Areas. https://www.europe-geology.eu/
+```
 
+## Lizenz
 
+Dieses Paket steht unter der MIT-Lizenz (siehe [LICENSE](LICENSE)).
 
+**Hinweis zur Datennutzung**: Die IGME5000-Daten unterliegen eigenen Lizenzbedingungen. Alle Rechte an den geologischen Daten verbleiben bei EuroGeoSurveys und den jeweiligen nationalen geologischen Diensten. Die Daten werden in diesem Paket ausschließlich zu wissenschaftlichen und analytischen Zwecken verwendet.
 
+## Kontakt und Beiträge
 
+**Autor**: Philipp August Münker  
+**E-Mail**: [philippaugustmuenker@gmail.com](mailto:philippaugustmuenker@gmail.com)  
+**Repository**: [https://github.com/PhilippAusgust/GeoSoilQuery](https://github.com/PhilippAusgust/GeoSoilQuery)
 
+Beiträge, Fehlerberichte und Feature-Anfragen sind herzlich willkommen. Bitte nutzen Sie dazu die Issue-Tracking-Funktion auf GitHub.
+
+---
 
 # GeoSoilQuery
 
-GeoSoilQuery is an R package for fast spatial queries of geological parameters
-based on the IGME5000 dataset. It encapsulates loading and spatial joining of large
-geological datasets and provides a simple API for point-based and batch-based queries.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![R](https://img.shields.io/badge/R-%3E%3D%204.0-blue)](https://www.r-project.org/)
 
-The package is intended for users who want to efficiently integrate geological
-context information into spatial analyses.
+An R package for efficient spatial queries of geological parameters based on the IGME5000 dataset.
 
+---
 
+## Overview
+
+**GeoSoilQuery** provides fast and straightforward spatial queries of geological parameters from the EuroGeoSurveys IGME5000 dataset. The package encapsulates loading and spatial joining of large geodatasets, offering an intuitive API for single-point and batch queries.
+
+The package is designed for researchers and analysts who need to efficiently integrate geological context information into their spatial analyses.
+
+## Key Features
+
+- **Single-point queries**: Retrieve geological parameters for individual coordinates
+- **Batch processing**: Query multiple locations simultaneously
+- **Caching mechanism**: Optimized performance through optional caching
+- **WGS84 support**: Standardized coordinate input (EPSG:4326)
+- **R6 class system**: Modern object-oriented interface
 
 ## Installation
 
-### Current (GitHub)
+The package can be installed directly from GitHub:
 
 ```r
-install.packages("remotes")
-remotes::install_github("philippaugustmuenker/GeoSoilQuery")
+# Install remotes (if not already installed)
+if (!require("remotes")) install.packages("remotes")
+
+# Install GeoSoilQuery
+remotes::install_github("PhilippAusgust/GeoSoilQuery")
 ```
 
+### System Requirements
 
-## Data
+- R ≥ 4.0
+- Required packages: `sf`, `R6`, `dplyr`
 
-Due to licensing and file size restrictions, the IGME5000 geodata are **not included**
-in this repository.
+## Data Source
 
+The geological data originate from the **IGME5000 project** by EuroGeoSurveys, an initiative to harmonize geological information across Europe.
 
+**Important**: Due to licensing and file size constraints, the IGME5000 geodata are not included in this repository.
 
-### Requesting the data
+### Data Access
 
-If you would like to use the data, please send a short email to:
+To obtain access to the required geodata, please contact:
 
 📧 [philippaugustmuenker@gmail.com](mailto:philippaugustmuenker@gmail.com)
 
-You will then receive a private download link.
+You will receive a private download link. After downloading, extract the data to a suitable directory, e.g.:
 
-After downloading, extract the folder for example to:
+```
+~/data/IGME5000/
+```
 
-`~/data/IGME5000`
+Further information about the IGME5000 project:  
+[https://www.europe-geology.eu/project/igme-5000-3/](https://www.europe-geology.eu/project/igme-5000-3/)
 
+## Usage
 
-
-## Example
-
-### Set data path
+### Initialization
 
 ```r
 library(GeoSoilQuery)
 
+# Define path to IGME5000 shapefile
 geology_path <- "~/data/IGME5000/europe/data/IGME5000_europeEPSG3034shp_geology_poly_v01.shp"
-```
 
-
-
-### Single point query
-
-```r
+# Create GeoSoilQuery object
 geo <- GeoSoilQuery$new(geology_path)
-
-geo$query_geology(lat = 50.9375, lon = 6.9603)
 ```
 
-
-### Batch query
+### Single-point Query
 
 ```r
-df <- data.frame(
-  Site = c("Koeln", "Berlin"),
-  Lat  = c(50.9375, 52.5200),
-  Lon  = c(6.9603, 13.4050)
+# Query geological parameters for Cologne
+result <- geo$query_geology(lat = 50.9375, lon = 6.9603)
+print(result)
+```
+
+### Batch Query
+
+```r
+# Create dataset with multiple sites
+sites <- data.frame(
+  Site = c("Cologne", "Berlin", "Munich"),
+  Lat  = c(50.9375, 52.5200, 48.1351),
+  Lon  = c(6.9603, 13.4050, 11.5820)
 )
 
-geo$query_batch(df, lat_col = "Lat", lon_col = "Lon")
+# Perform batch query
+results <- geo$query_batch(sites, lat_col = "Lat", lon_col = "Lon")
+print(results)
 ```
 
-
-
-### Cache
+### Cache Management
 
 ```r
+# Display cache information
 geo$cache_info()
+
+# Clear cache
 geo$clear_cache()
 ```
 
+## Technical Notes
 
+- **Coordinate system**: All input coordinates must be in WGS84 format (EPSG:4326, decimal degrees)
+- **Data processing**: The shapefile is automatically loaded and transformed to the appropriate coordinate system upon first use
+- **Performance**: Intelligent caching significantly accelerates repeated queries
+- **Memory requirements**: Memory consumption may be substantial for large datasets
 
-## Notes
+## Citation
 
-- Coordinates must be provided in WGS84 format (EPSG:4326).
-- The shapefile is loaded and transformed internally only once.
-- Results can optionally be cached to improve performance.
+When using this package in scientific publications, please cite both the package and the underlying IGME5000 data source.
 
+```
+Münker, P. A. (2025). GeoSoilQuery: Spatial Query Tool for Geological Parameters.
+R package. https://github.com/PhilippAusgust/GeoSoilQuery
 
-
-## Data source
-
-The geological data originate from the **IGME5000 project** of EuroGeoSurveys.
-
-The data are used here exclusively for demonstration and analytical purposes.
-All rights remain with the respective data providers.
-
-https://www.europe-geology.eu/project/igme-5000-3/
-
-
+EuroGeoSurveys (2020). IGME5000: 1:5 Million International Geological Map of Europe
+and Adjacent Areas. https://www.europe-geology.eu/
+```
 
 ## License
 
-This package is released under the MIT License (see LICENSE).
+This package is released under the MIT License (see [LICENSE](LICENSE)).
 
+**Data usage notice**: The IGME5000 data are subject to their own licensing terms. All rights to the geological data remain with EuroGeoSurveys and the respective national geological surveys. The data are used in this package exclusively for scientific and analytical purposes.
 
+## Contact and Contributions
 
+**Author**: Philipp August Münker  
+**Email**: [philippaugustmuenker@gmail.com](mailto:philippaugustmuenker@gmail.com)  
+**Repository**: [https://github.com/PhilippAusgust/GeoSoilQuery](https://github.com/PhilippAusgust/GeoSoilQuery)
 
+Contributions, bug reports, and feature requests are welcome. Please use the issue tracking feature on GitHub.
 
-
-
+---
