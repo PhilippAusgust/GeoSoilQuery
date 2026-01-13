@@ -59,6 +59,58 @@ Sie erhalten anschließend einen privaten Download-Link. Nach dem Download entpa
 Weitere Informationen zum IGME5000-Projekt:  
 [https://www.europe-geology.eu/de/project/igme-5000-3/](https://www.europe-geology.eu/de/project/igme-5000-3/)
 
+## IGME5000 Datenstruktur
+
+Der IGME5000-Datensatz folgt einer hierarchischen Struktur mit verschiedenen Parameterebenen:
+
+### Räumliche Ebene
+```
+├── geometry        Vektorgeometrie der geologischen Einheit (Polygon/Multipolygon)
+├── area_id         Eindeutige numerische Flächen-ID für jedes Polygon
+├── Shape_STAr      Berechneter Flächeninhalt des Polygons
+└── Shape_STLe      Berechnete Umfangslänge des Polygons
+```
+
+### Geologische Klassifikation
+```
+├── GEO             Eindeutige geologische Einheiten-ID
+├── MARIN           Klassifizierung: Marine (Offshore) oder Kontinental (Onshore)
+│
+├── Alter
+│   ├── Portr_AGE   Kodierte Darstellung des geologischen Zeitalters (für Kartenfarbgebung)
+│   ├── AgeName     Textuelle Bezeichnung des geologischen Zeitalters (z.B. "Ordovician")
+│   ├── AgeOldest   Numerisches maximales Alter in Millionen Jahren (Ma)
+│   └── AgeNewest   Numerisches minimales Alter in Millionen Jahren (Ma)
+│
+├── Lithologie/Petrographie
+│   ├── Portr_Petr  Hauptklassifikation der Gesteinsart (Sediment, Magmatit, Metamorphit)
+│   ├── Portr_Pe_1  Erste Detailebene (z.B. klastisch vs. karbonatisch)
+│   ├── Portr_Pe_2  Zweite Detailebene (z.B. Korngröße, Zusammensetzung)
+│   └── Portr_Pe_3  Dritte Detailebene (detaillierte mineralogische Eigenschaften)
+│
+├── Spezielle Eigenschaften
+│   ├── Portr_META  Metamorphosegrad (z.B. niedrig-, mittel-, hochgradig)
+│   ├── Portr_IGNE  Klassifikation magmatischer Gesteine (plutonisch, vulkanisch)
+│   ├── Portr_MARI  Spezifische marine geologische Einheiten (ozeanische Kruste, Schelf)
+│   └── Portr_IceO  Kennzeichnung von Eis- und Ozeangebieten
+│
+└── Kontextinformation
+    ├── regName     Regionaler oder lokaler Formationsname (z.B. "Buntsandstein")
+    └── genElement  Genetisches/tektonisches Element (z.B. Becken, Orogen, Kraton)
+```
+
+### Erläuterung der Parameter-Hierarchie
+
+Die Datenstruktur ist so organisiert, dass:
+
+1. **Räumliche Parameter** die geometrische Grundlage bilden
+2. **Alter-Parameter** die zeitliche Einordnung ermöglichen (sowohl kategorisch als auch numerisch)
+3. **Lithologie-Parameter** in drei Detaillierungsstufen die Gesteinstypen klassifizieren
+4. **Spezielle Eigenschaften** zusätzliche petrologische Informationen liefern
+5. **Kontextinformationen** regionale und tektonische Einbettung beschreiben
+
+Diese hierarchische Organisation ermöglicht flexible Abfragen auf verschiedenen Detailebenen, von groben geologischen Überblicken bis zu spezifischen petrographischen Analysen.
+
 ## Verwendung
 
 ### Initialisierung
@@ -86,9 +138,13 @@ print(result)
 ```r
 # Datensatz mit mehreren Standorten erstellen
 sites <- data.frame(
-  Site = c("Köln", "Berlin", "München"),
-  Lat  = c(50.9375, 52.5200, 48.1351),
-  Lon  = c(6.9603, 13.4050, 11.5820)
+  Grid = c(100, 101, 102, 103, 104, 105, 106, 107, 108, 109),
+  Site = c("Köln", "Berlin", "München", "Hamburg", "Frankfurt", 
+           "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"),
+  Lat  = c(50.9375, 52.5200, 48.1351, 53.5511, 50.1109,
+           48.7758, 51.2277, 51.5136, 51.4556, 51.3397),
+  Lon  = c(6.9603, 13.4050, 11.5820, 9.9937, 8.6821,
+           9.1829, 6.7735, 7.4653, 7.0116, 12.3731)
 )
 
 # Batch-Abfrage durchführen
@@ -106,12 +162,42 @@ geo$cache_info()
 geo$clear_cache()
 ```
 
+## Beispielabfragen nach Parametern
+
+### Abfrage nach Alter
+
+```r
+# Gesteine älter als 500 Millionen Jahre
+old_rocks <- results[results$AgeOldest > 500, ]
+
+# Ordovizische Gesteine
+ordovician <- results[grepl("Ordovician", results$AgeName, ignore.case = TRUE), ]
+```
+
+### Abfrage nach Lithologie
+
+```r
+# Nur magmatische Gesteine
+igneous <- results[!is.na(results$Portr_IGNE), ]
+
+# Metamorphe Gesteine mit hohem Grad
+high_meta <- results[!is.na(results$Portr_META), ]
+```
+
+### Abfrage nach regionalen Formationen
+
+```r
+# Deutsche regionale Formationen
+german_formations <- results[!is.na(results$regName), ]
+```
+
 ## Technische Hinweise
 
 - **Koordinatensystem**: Alle Eingabekoordinaten müssen im WGS84-Format (EPSG:4326, Dezimalgrad) vorliegen
 - **Datenverarbeitung**: Der Shapefile wird beim ersten Laden automatisch geladen und in das entsprechende Koordinatensystem transformiert
 - **Performance**: Durch intelligentes Caching werden wiederholte Abfragen deutlich beschleunigt
 - **Speicherbedarf**: Bei großen Datensätzen kann der Speicherbedarf signifikant sein
+- **Maßstab**: IGME5000 hat einen Maßstab von 1:5.000.000, was eine starke Generalisierung bedeutet
 
 ## Zitation
 
@@ -121,8 +207,9 @@ Bei Verwendung dieses Pakets in wissenschaftlichen Publikationen bitten wir um N
 Münker, P. A. (2025). GeoSoilQuery: Spatial Query Tool for Geological Parameters.
 R package. https://github.com/PhilippAusgust/GeoSoilQuery
 
-EuroGeoSurveys (2020). IGME5000: 1:5 Million International Geological Map of Europe
-and Adjacent Areas. https://www.europe-geology.eu/
+Asch, K. (2005). The 1:5 Million International Geological Map of Europe and 
+Adjacent Areas - IGME 5000. BGR, Hannover. 
+DOI: https://doi.org/10.25928/igme-5000
 ```
 
 ## Lizenz
@@ -202,6 +289,58 @@ You will receive a private download link. After downloading, extract the data to
 Further information about the IGME5000 project:  
 [https://www.europe-geology.eu/project/igme-5000-3/](https://www.europe-geology.eu/project/igme-5000-3/)
 
+## IGME5000 Data Structure
+
+The IGME5000 dataset follows a hierarchical structure with different parameter levels:
+
+### Spatial Level
+```
+├── geometry        Vector geometry of the geological unit (Polygon/Multipolygon)
+├── area_id         Unique numeric area ID for each polygon
+├── Shape_STAr      Calculated area of the polygon
+└── Shape_STLe      Calculated perimeter length of the polygon
+```
+
+### Geological Classification
+```
+├── GEO             Unique geological unit ID
+├── MARIN           Classification: Marine (Offshore) or Continental (Onshore)
+│
+├── Age
+│   ├── Portr_AGE   Coded representation of geological age (for map coloring)
+│   ├── AgeName     Textual designation of geological age (e.g., "Ordovician")
+│   ├── AgeOldest   Numerical maximum age in million years (Ma)
+│   └── AgeNewest   Numerical minimum age in million years (Ma)
+│
+├── Lithology/Petrography
+│   ├── Portr_Petr  Main classification of rock type (sedimentary, igneous, metamorphic)
+│   ├── Portr_Pe_1  First detail level (e.g., clastic vs. carbonate)
+│   ├── Portr_Pe_2  Second detail level (e.g., grain size, composition)
+│   └── Portr_Pe_3  Third detail level (detailed mineralogical properties)
+│
+├── Special Properties
+│   ├── Portr_META  Metamorphic grade (e.g., low-, medium-, high-grade)
+│   ├── Portr_IGNE  Classification of igneous rocks (plutonic, volcanic)
+│   ├── Portr_MARI  Specific marine geological units (oceanic crust, shelf)
+│   └── Portr_IceO  Designation of ice and ocean areas
+│
+└── Context Information
+    ├── regName     Regional or local formation name (e.g., "Old Red Sandstone")
+    └── genElement  Genetic/tectonic element (e.g., basin, orogen, craton)
+```
+
+### Parameter Hierarchy Explanation
+
+The data structure is organized such that:
+
+1. **Spatial parameters** form the geometric foundation
+2. **Age parameters** enable temporal classification (both categorical and numerical)
+3. **Lithology parameters** classify rock types in three levels of detail
+4. **Special properties** provide additional petrological information
+5. **Context information** describes regional and tectonic setting
+
+This hierarchical organization enables flexible queries at different levels of detail, from broad geological overviews to specific petrographic analyses.
+
 ## Usage
 
 ### Initialization
@@ -229,9 +368,13 @@ print(result)
 ```r
 # Create dataset with multiple sites
 sites <- data.frame(
-  Site = c("Cologne", "Berlin", "Munich"),
-  Lat  = c(50.9375, 52.5200, 48.1351),
-  Lon  = c(6.9603, 13.4050, 11.5820)
+  Grid = c(100, 101, 102, 103, 104, 105, 106, 107, 108, 109),
+  Site = c("Cologne", "Berlin", "Munich", "Hamburg", "Frankfurt", 
+           "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"),
+  Lat  = c(50.9375, 52.5200, 48.1351, 53.5511, 50.1109,
+           48.7758, 51.2277, 51.5136, 51.4556, 51.3397),
+  Lon  = c(6.9603, 13.4050, 11.5820, 9.9937, 8.6821,
+           9.1829, 6.7735, 7.4653, 7.0116, 12.3731)
 )
 
 # Perform batch query
@@ -249,12 +392,42 @@ geo$cache_info()
 geo$clear_cache()
 ```
 
+## Example Queries by Parameter
+
+### Query by Age
+
+```r
+# Rocks older than 500 million years
+old_rocks <- results[results$AgeOldest > 500, ]
+
+# Ordovician rocks
+ordovician <- results[grepl("Ordovician", results$AgeName, ignore.case = TRUE), ]
+```
+
+### Query by Lithology
+
+```r
+# Igneous rocks only
+igneous <- results[!is.na(results$Portr_IGNE), ]
+
+# High-grade metamorphic rocks
+high_meta <- results[!is.na(results$Portr_META), ]
+```
+
+### Query by Regional Formations
+
+```r
+# Regional formations
+regional_formations <- results[!is.na(results$regName), ]
+```
+
 ## Technical Notes
 
 - **Coordinate system**: All input coordinates must be in WGS84 format (EPSG:4326, decimal degrees)
 - **Data processing**: The shapefile is automatically loaded and transformed to the appropriate coordinate system upon first use
 - **Performance**: Intelligent caching significantly accelerates repeated queries
 - **Memory requirements**: Memory consumption may be substantial for large datasets
+- **Scale**: IGME5000 has a scale of 1:5,000,000, which means strong generalization
 
 ## Citation
 
@@ -264,8 +437,9 @@ When using this package in scientific publications, please cite both the package
 Münker, P. A. (2025). GeoSoilQuery: Spatial Query Tool for Geological Parameters.
 R package. https://github.com/PhilippAusgust/GeoSoilQuery
 
-EuroGeoSurveys (2020). IGME5000: 1:5 Million International Geological Map of Europe
-and Adjacent Areas. https://www.europe-geology.eu/
+Asch, K. (2005). The 1:5 Million International Geological Map of Europe and 
+Adjacent Areas - IGME 5000. BGR, Hannover. 
+DOI: https://doi.org/10.25928/igme-5000
 ```
 
 ## License
