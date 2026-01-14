@@ -129,8 +129,13 @@ geo <- GeoSoilQuery$new(geology_path)
 
 ```r
 # Geologische Parameter für Köln abfragen
-result <- geo$query_geology(lat = 50.9375, lon = 6.9603)
+result <- geo$query_geology(lat = 50.9375, lon = 6.9603, return_df= FALSE)
 print(result)
+
+# Einzelabfrage mit Rückgabe eines df 
+result <- geo$query_geology(lat = 50.9375, lon = 6.9603, return_df= TRUE)
+print(result)
+
 ```
 
 ### Batch-Abfrage
@@ -138,7 +143,6 @@ print(result)
 ```r
 # Datensatz mit mehreren Standorten erstellen
 sites <- data.frame(
-  Grid = c(100, 101, 102, 103, 104, 105, 106, 107, 108, 109),
   Site = c("Köln", "Berlin", "München", "Hamburg", "Frankfurt", 
            "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"),
   Lat  = c(50.9375, 52.5200, 48.1351, 53.5511, 50.1109,
@@ -167,28 +171,31 @@ geo$clear_cache()
 ### Abfrage nach Alter
 
 ```r
-# Gesteine älter als 500 Millionen Jahre
-old_rocks <- results[results$AgeOldest > 500, ]
+# Gesteine älter als 200 Millionen Jahre
+old_rocks <- results[results$AgeOldest > 200, ]
 
-# Ordovizische Gesteine
-ordovician <- results[grepl("Ordovician", results$AgeName, ignore.case = TRUE), ]
+# Miocene Gesteine
+Miocene <- results[results$AgeName == "Miocene", ]
 ```
 
-### Abfrage nach Lithologie
+## Funktionaler Ansatz 
 
 ```r
-# Nur magmatische Gesteine
-igneous <- results[!is.na(results$Portr_IGNE), ]
+# Wrapper Funktion zur schnellen Einzelabfrage 
+get_geology_at(lat = Latitude, lon = Longitude, geology_path, UseCache = FALSE, 
+               ReturnDF=TRUE)
 
-# Metamorphe Gesteine mit hohem Grad
-high_meta <- results[!is.na(results$Portr_META), ]
+
+geology <- get_geology_at(lat = 50.9375, lon = 6.9603, geology_path, 
+                         UseCache = FALSE, ReturnDF=TRUE)
 ```
 
-### Abfrage nach regionalen Formationen
+### Batch Abfrage funktional 
 
 ```r
-# Deutsche regionale Formationen
-german_formations <- results[!is.na(results$regName), ]
+
+df_batch <- add_geology_to_df(sites,geology_path, lat_col = "Lat", lon_col = "Lon")
+
 ```
 
 ## Technische Hinweise
@@ -368,7 +375,6 @@ print(result)
 ```r
 # Create dataset with multiple sites
 sites <- data.frame(
-  Grid = c(100, 101, 102, 103, 104, 105, 106, 107, 108, 109),
   Site = c("Cologne", "Berlin", "Munich", "Hamburg", "Frankfurt", 
            "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig"),
   Lat  = c(50.9375, 52.5200, 48.1351, 53.5511, 50.1109,
@@ -397,28 +403,32 @@ geo$clear_cache()
 ### Query by Age
 
 ```r
-# Rocks older than 500 million years
-old_rocks <- results[results$AgeOldest > 500, ]
+# Rocks older than 200 million years
+old_rocks <- results[results$AgeOldest > 200, ]
 
-# Ordovician rocks
-ordovician <- results[grepl("Ordovician", results$AgeName, ignore.case = TRUE), ]
+# Miocene rocks
+Miocene <- results[results$AgeName == "Miocene", ]
 ```
 
-### Query by Lithology
+## Functional Approach  
+
 
 ```r
-# Igneous rocks only
-igneous <- results[!is.na(results$Portr_IGNE), ]
+# Wrapper function for fast single queries 
+get_geology_at(lat = Latitude, lon = Longitude, geology_path, UseCache = FALSE, 
+               ReturnDF=TRUE)
 
-# High-grade metamorphic rocks
-high_meta <- results[!is.na(results$Portr_META), ]
+
+geology <- get_geology_at(lat = 50.9375, lon = 6.9603, geology_path, 
+                         UseCache = FALSE, ReturnDF=TRUE)
 ```
+### Batch query functional 
 
-### Query by Regional Formations
 
 ```r
-# Regional formations
-regional_formations <- results[!is.na(results$regName), ]
+
+df_batch <- add_geology_to_df(sites,geology_path, lat_col = "Lat", lon_col = "Lon")
+
 ```
 
 ## Technical Notes

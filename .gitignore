@@ -6,3 +6,4 @@ inst/doc
 GeoSoilQuery.Rcheck
 GeoSoilQuery_*.tar.gz
 inst/extdata/IGME5000/
+Test.R

@@ -293,9 +293,9 @@ GeoSoilQuery <- R6::R6Class(
 #' @param geology_path Pfad zum geologischen Shapefile.
 #' @return Liste mit geologischen Attributen.
 #' @export
-get_geology_at <- function(lat, lon, geology_path) {
-  query_engine <- GeoSoilQuery$new(geology_path, use_cache = FALSE)
-  query_engine$query_geology(lat, lon)
+get_geology_at <- function(lat, lon, geology_path, UseCache = FALSE, ReturnDF=TRUE) {
+  query_engine <- GeoSoilQuery$new(geology_path, use_cache = UseCache)
+  query_engine$query_geology(lat, lon, return_df = ReturnDF)
 }
 
 #' Geologische Parameter zu DataFrame hinzufügen
