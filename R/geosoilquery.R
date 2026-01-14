@@ -298,6 +298,7 @@ get_geology_at <- function(lat, lon, geology_path, UseCache = FALSE, ReturnDF=TR
   query_engine$query_geology(lat, lon, return_df = ReturnDF)
 }
 
+
 #' Geologische Parameter zu DataFrame hinzufügen
 #'
 #' Convenience-Funktion für Batch-Abfragen ohne explizite Klassennutzung.
